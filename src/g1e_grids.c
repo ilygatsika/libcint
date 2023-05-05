@@ -26,7 +26,17 @@ void CINTinit_int1e_grids_EnvVars(CINTEnvVars *envs, FINT *ng, FINT *shls,
         envs->common_factor = 2 * M_PI
                 * CINTcommon_fac_sp(envs->i_l) * CINTcommon_fac_sp(envs->j_l);
 
-        FINT nroots = envs->nrys_roots;
+        int rys_order = envs->nrys_roots;
+        int nroots = rys_order;
+#ifdef WITH_RANGE_COULOMB
+        double omega = env[PTR_RANGE_OMEGA];
+        if (omega < 0 && rys_order <= 3) {
+                nroots *= 2;
+        }
+#endif
+        envs->rys_order = rys_order;
+        envs->nrys_roots = nroots;
+
         FINT dli, dlj;
         FINT ibase = envs->li_ceil > envs->lj_ceil;
         if (ibase) {
@@ -111,6 +121,11 @@ FINT CINTg0_1e_grids(double *g, double cutoff,
                 // numerical issue in sr_rys_roots Use this cutoff as a
                 // temporary solution to avoid the numerical issue
                 double temp_cutoff = MIN(cutoff, EXPCUTOFF_SR);
+                int rorder = envs->rys_order;
+                double fac_theta;
+                if (rorder != nroots) {
+                        fac_theta = fac1 * -sqrt_theta;
+                }
                 for (ig = 0; ig < bgrids; ig++) {
                         x = aij * RGSQUARE(rijrg, ig);
                         if (theta * x > temp_cutoff) {
@@ -119,11 +134,20 @@ FINT CINTg0_1e_grids(double *g, double cutoff,
                                         u[ig+GRID_BLKSIZE*i] = 0;
                                         w[ig+GRID_BLKSIZE*i] = 0;
                                 }
-                        } else {
+                        } else if (rorder == nroots) {
                                 CINTsr_rys_roots(nroots, x, sqrt_theta, ubuf, wbuf);
                                 for (i = 0; i < nroots; i++) {
                                         u[ig+GRID_BLKSIZE*i] = ubuf[i] / (ubuf[i] + 1);
                                         w[ig+GRID_BLKSIZE*i] = wbuf[i] * fac1;
+                                }
+                        } else {
+                                CINTrys_roots(rorder, x, ubuf, wbuf);
+                                CINTrys_roots(rorder, theta*x, ubuf+rorder, wbuf+rorder);
+                                for (i = 0; i < rorder; i++) {
+                                        u[ig+GRID_BLKSIZE*i] = ubuf[i] / (ubuf[i] + 1);
+                                        w[ig+GRID_BLKSIZE*i] = wbuf[i] * fac1;
+                                        u[ig+GRID_BLKSIZE*(i+rorder)] = ubuf[i] / (ubuf[i] + 1) * theta;
+                                        w[ig+GRID_BLKSIZE*(i+rorder)] = wbuf[i] * fac_theta;
                                 }
                         }
                 }

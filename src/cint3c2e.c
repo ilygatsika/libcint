@@ -107,7 +107,7 @@ FINT CINT3c2e_loop_nopt(double *gctr, CINTEnvVars *envs, double *cache, FINT *em
         double *rkl = envs->rk;
 #ifdef WITH_RANGE_COULOMB
         double omega = env[PTR_RANGE_OMEGA];
-        if (omega < 0 && envs->nrys_roots > 1) {
+        if (omega < 0 && envs->rys_order > 1) {
                 double r_guess = 8.;
                 double omega2 = omega * omega;
                 int lij = envs->li_ceil + envs->lj_ceil;
@@ -282,7 +282,7 @@ i_contracted: ;
 #ifdef WITH_RANGE_COULOMB
 #define ADJUST_CUTOFF      \
         double omega = env[PTR_RANGE_OMEGA]; \
-        if (omega < 0 && envs->nrys_roots > 1) { \
+        if (omega < 0 && envs->rys_order > 1) { \
                 double r_guess = 8.; \
                 double omega2 = omega * omega; \
                 int lij = envs->li_ceil + envs->lj_ceil; \

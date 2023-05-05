@@ -130,7 +130,7 @@ FINT CINT2e_loop_nopt(double *gctr, CINTEnvVars *envs, double *cache, FINT *empt
                 // is a good approximation for polynomial parts in SR-ERIs.
                 //    <~ (aj*d/aij+theta*R)^li * (ai*d/aij+theta*R)^lj * (pi/aij)^1.5
                 //    <~ (d+theta*R)^li * (d+theta*R)^lj * (pi/aij)^1.5
-                if (envs->nrys_roots > 1) {
+                if (envs->rys_order > 1) {
                         double r_guess = 8.;
                         double omega2 = omega * omega;
                         int lij = envs->li_ceil + envs->lj_ceil;
@@ -363,7 +363,7 @@ k_contracted: ;
 #ifdef WITH_RANGE_COULOMB
 #define ADJUST_CUTOFF      \
         double omega = env[PTR_RANGE_OMEGA]; \
-        if (omega < 0 && envs->nrys_roots > 1) { \
+        if (omega < 0 && envs->rys_order > 1) { \
                 double r_guess = 8.; \
                 double omega2 = omega * omega; \
                 int lij = envs->li_ceil + envs->lj_ceil; \
